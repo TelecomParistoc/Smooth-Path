@@ -124,8 +124,8 @@ float det(vec v1, vec v2)
 }
 
 /* Problem: Go from A in Adir direction to B in Bdir direction smoothly
-** Constraints: Rotation at A must have a radius r1 and, at B, a r2 radius
-** Result: Points C and D where the path leave A circle and respectively join B circle
+** Constraints: Rotation at A must have a radius of r1 and, at B, a radius of r2
+** Result: Points C and D where the path leave the first circle and respectively join the second circle
 */
 void smoothPath()
 {
@@ -145,6 +145,7 @@ void smoothPath()
 		C.y = A.y;
 		D.x = B.x;
 		D.y = B.y;
+		return;
 	}
 	// O1 and O2 become center of cercles followed by the path
 	O1 = add(A, mult(O1, (dist(I, add(A, O1)) < dist(I, add(A, mult(O1, -1)))) ? r1 : -r1));
