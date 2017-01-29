@@ -130,11 +130,11 @@ float det(vec v1, vec v2)
 void smoothPath()
 {
 	// normalize Adir and Bdir
-	Adir = norm(Adir);
-	Bdir = norm(Bdir);
+	vec AdirNorm = norm(Adir);
+	vec BdirNorm = norm(Bdir);
 	// get perpendicular direction of Adir and Bdir
-	O1 = perp(Adir);
-	O2 = perp(Bdir);
+	O1 = perp(AdirNorm);
+	O2 = perp(BdirNorm);
 	// get intersection between two perpendicular lines
 	int flag;
 	vec I = intersect(A, B, O1, O2, &flag);
@@ -151,11 +151,11 @@ void smoothPath()
 	O1 = add(A, mult(O1, (dist(I, add(A, O1)) < dist(I, add(A, mult(O1, -1)))) ? r1 : -r1));
 	O2 = add(B, mult(O2, (dist(I, add(B, O2)) < dist(I, add(B, mult(O2, -1)))) ? r2 : -r2));
 	// find all confirurations of two tangents of the two circles
-	float ABx = O2.x - O1.x;
-	float ABy = O2.y - O1.y;
+	float OOx = O2.x - O1.x;
+	float OOy = O2.y - O1.y;
 	// get rotation (CW, or CCW) aroud circles
-	int rot1 = (det(sub(A, O1), Adir) > 0) ? 1 : 0; // 1:CCW, 0:CW
-	int rot2 = (det(sub(B, O2), Bdir) > 0) ? 1 : 0; // 1:CCW, 0:CW
+	int rot1 = (det(sub(A, O1), AdirNorm) > 0) ? 1 : 0; // 1:CCW, 0:CW
+	int rot2 = (det(sub(B, O2), BdirNorm) > 0) ? 1 : 0; // 1:CCW, 0:CW
 	float r, theta1, theta2;
 	if(rot1 == rot2)
 		// path does not cross line between O1 and O2
@@ -163,29 +163,37 @@ void smoothPath()
 	else
 		// path cross line between O1 and O2
 		r = r1 + r2;
+	float theta;
 	// two possibilities for angle still exists
-	theta1 = 2 * atan((ABy + sqrt(ABx*ABx + ABy*ABy - r*r)) / (ABx + r));
-	theta2 = 2 * atan((ABy - sqrt(ABx*ABx + ABy*ABy - r*r)) / (ABx + r));
-	// find angles (x,O1A) and (x,O1B)
-	float a1 = atan2(A.y - O1.y, A.x - O1.x);
-	// choose between theta1 and theta2
-	float diff1 = theta1 - a1;
-	float diff2 = theta2 - a1;
-	if(diff1 < 0) diff1 += 2 * M_PI;
-	if(diff2 < 0) diff2 += 2 * M_PI;
-	int cond = (diff1 > diff2 ? 1 : 0) + rot1;
-	a1 = (cond == 1) ? theta1 : theta2;
-	C.x = O1.x + r1 * cos(a1);
-	C.y = O1.y + r1 * sin(a1);
+	if(OOx + r != 0)
+	{
+		theta1 = 2 * atan((OOy + sqrt(OOx*OOx + OOy*OOy - r*r)) / (OOx + r));
+		theta2 = 2 * atan((OOy - sqrt(OOx*OOx + OOy*OOy - r*r)) / (OOx + r));
+		// find angles (x,O1A) and (x,O1B)
+		float a1 = atan2(A.y - O1.y, A.x - O1.x);
+		// choose between theta1 and theta2
+		float diff1 = theta1 - a1;
+		float diff2 = theta2 - a1;
+		if(diff1 < 0) diff1 += 2 * M_PI;
+		if(diff2 < 0) diff2 += 2 * M_PI;
+		int cond = (diff1 > diff2 ? 1 : 0) + rot1;
+		theta = (cond == 1) ? theta1 : theta2;
+	}
+	else if(OOy != 0)
+		theta = 2 * atan(r / OOy);
+	else
+		theta = M_PI;	
+	C.x = O1.x + r1 * cos(theta);
+	C.y = O1.y + r1 * sin(theta);
 	if(rot1 != rot2)
 	{
-		D.x = O2.x + r2 * cos(a1 + M_PI);
-		D.y = O2.y + r2 * sin(a1 + M_PI);
+		D.x = O2.x + r2 * cos(theta + M_PI);
+		D.y = O2.y + r2 * sin(theta + M_PI);
 	}
 	else
 	{
-		D.x = O2.x + r2 * cos(a1);
-		D.y = O2.y + r2 * sin(a1);
+		D.x = O2.x + r2 * cos(theta);
+		D.y = O2.y + r2 * sin(theta);
 	}
 }
 
