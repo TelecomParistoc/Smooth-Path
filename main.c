@@ -89,8 +89,8 @@ vec sub(vec v1, vec v2)
 /* return intersection point betwwen two lines
 ** a line is define by a point and a vector
 ** flag: 0: intersection found
-**       1: same line
-**       2: parallel lines (not same)
+**       1: parallel lines
+**       2: parralel lines and perpendicular to p1p2
 */
 vec intersect(vec p1, vec p2, vec v1, vec v2, int* flag)
 {
@@ -107,10 +107,11 @@ vec intersect(vec p1, vec p2, vec v1, vec v2, int* flag)
 		return res;
 	}
 	// lines are parallel
-	*flag = 2;
-	if((p1.y - p2.y) * v1.x == (p1.x - p2.x) * v1.y)
-		// lines are identical
-		*flag = 1;
+	*flag = 1;
+	printf("%f == %f, %f, %f\n", (p1.y - p2.y) * v1.x, (p1.x - p2.x) * v1.y, p1.x, p2.x);
+	if(scal(sub(p1, p2), v1) == 0)
+		// p1p2 and v1 are perpendicular
+		*flag = 2;
 	res.x = (p1.x + p2.x) / 2;
 	res.y = (p1.y + p2.y) / 2;
 	return res;
@@ -138,18 +139,26 @@ void smoothPath()
 	// get intersection between two perpendicular lines
 	int flag;
 	vec I = intersect(A, B, O1, O2, &flag);
-	if(flag == 2)
+	// if A, B, Adir and Bdir are aligned
+	if(flag == 2 && scal(Adir, Bdir) > 0)
 	{
 		// directions and points are aligned
 		C.x = A.x;
 		C.y = A.y;
 		D.x = B.x;
 		D.y = B.y;
+		O1.x = A.x;
+		O1.y = A.y;
+		O2.x = B.x;
+		O2.y = B.y;
+		r1 = 0;
+		r2 = 0;
 		return;
 	}
 	// O1 and O2 become center of cercles followed by the path
+	int coef = (flag == 2) ? -1 : 1;
 	O1 = add(A, mult(O1, (dist(I, add(A, O1)) < dist(I, add(A, mult(O1, -1)))) ? r1 : -r1));
-	O2 = add(B, mult(O2, (dist(I, add(B, O2)) < dist(I, add(B, mult(O2, -1)))) ? r2 : -r2));
+	O2 = add(B, mult(O2, coef * ((dist(I, add(B, O2)) < dist(I, add(B, mult(O2, -1)))) ? r2 : -r2)));
 	// find all confirurations of two tangents of the two circles
 	float OOx = O2.x - O1.x;
 	float OOy = O2.y - O1.y;
@@ -244,16 +253,16 @@ void draw()
 
 int main()
 {
-	A.x = 2.2; // Start position X
-	A.y = -3.4; // Start position Y
-	Adir.x = 2; // Start direction X
-	Adir.y = 0.2; // Start direction Y
-	B.x = -1.1; // Stop position X
-	B.y = 4; // Stop position Y
-	Bdir.x = -0.3; // Stop direction X
-	Bdir.y = -1.4; //Stop direction Y
-	r1 = 0.8; // First radius
-	r2 = 2.4; // Second radius
+	A.x = 1; // Start position X
+	A.y = 0; // Start position Y
+	Adir.x = 10; // Start direction X
+	Adir.y = 0; // Start direction Y
+	B.x = 0; // Stop position X
+	B.y = 200; // Stop position Y
+	Bdir.x = 10; // Stop direction X
+	Bdir.y = 0; //Stop direction Y
+	r1 = 50; // First radius
+	r2 = 50; // Second radius
 	printf("A[%f,%f] // Start\n", A.x, A.y);
 	printf("B[%f,%f] // Stop\n", B.x, B.y);
 	smoothPath();
